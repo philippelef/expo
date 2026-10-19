@@ -108,6 +108,7 @@ export {
 } from './react-navigation/routers';
 export { NativeStackView } from './react-navigation/native-stack';
 export { enableLegacyHeaderAppearance } from './react-navigation/native-stack/views/headerAppearance';
+export { disableModalPresentationWarning } from './react-navigation/native-stack/utils/modalPresentationWarning';
 export type {
   NativeStackDescriptorMap,
   NativeStackViewState,

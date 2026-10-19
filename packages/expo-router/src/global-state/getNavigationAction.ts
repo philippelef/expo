@@ -23,6 +23,8 @@ export type NavigateActionConfig = {
   routeNode?: RouteNode | null;
   linking?: Pick<ExpoLinkingOptions, 'config' | 'getStateFromPath'>;
   redirects?: StoreRedirects[];
+  // A prediction that does not navigate passes `false`.
+  openExternalRedirects?: boolean;
 };
 
 export function getNavigateAction(
@@ -42,7 +44,8 @@ export function getNavigateAction(
   const routeInfo = getRouteInfoFromState(navigationState);
   const href = applyRedirects(
     resolveHrefStringWithSegments(baseHref, routeInfo, options),
-    config.redirects
+    config.redirects,
+    config.openExternalRedirects
   )!;
 
   const state = config.linking.getStateFromPath!(href, config.linking.config, routeInfo.segments);

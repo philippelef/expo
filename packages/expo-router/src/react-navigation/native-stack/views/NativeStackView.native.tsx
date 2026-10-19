@@ -30,6 +30,7 @@ import type {
 import { ScreenPresentationContext } from '../utils/ScreenPresentationContext';
 import { debounce } from '../utils/debounce';
 import { getModalRouteKeys } from '../utils/getModalRoutesKeys';
+import { useCardShownAsModalWarning } from '../utils/modalPresentationWarning';
 import { AnimatedHeaderHeightContext } from '../utils/useAnimatedHeaderHeight';
 import { useDismissedRouteError } from '../utils/useDismissedRouteError';
 import { useInvalidPreventRemoveError } from '../utils/useInvalidPreventRemoveError';
@@ -474,6 +475,7 @@ export function NativeStackView({
   // Preloaded routes are detached and don't participate in back-affordance or modal grouping.
   const activeRoutes = state.routes.filter((route) => !isPreloaded(route.key));
   const modalRouteKeys = getModalRouteKeys(activeRoutes, descriptors);
+  useCardShownAsModalWarning(activeRoutes, descriptors);
 
   return (
     <SafeAreaProviderCompat>

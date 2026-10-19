@@ -5,11 +5,14 @@ import type { LoadedRoute, RouteNode } from './Route';
 const anchors = new WeakMap<RouteNode, string | undefined>();
 // Set while `collectMissingLayouts` runs. `getLayoutAnchor` is called from deep inside seeding and
 // the reducer, so this is a module variable instead of a parameter passed through every function.
-let collector: { missing: Set<RouteNode>; skipped: ReadonlySet<RouteNode> } | undefined;
+let collector:
+  | { missing: Set<RouteNode>; skipped: ReadonlySet<RouteNode>; load: boolean }
+  | undefined;
 
 /**
  * Returns the route name of the layout's anchor. In async import mode, a layout that is not
- * loaded yet has no known anchor; the read starts its download and records it as missing.
+ * loaded yet has no known anchor; the read records it as missing and starts its download, unless
+ * `collectMissingLayouts` runs with `load` set to `false`.
  */
 export function getLayoutAnchor(node: RouteNode): string | undefined {
   if (node.type !== 'layout') {
@@ -21,6 +24,11 @@ export function getLayoutAnchor(node: RouteNode): string | undefined {
   // A layout that failed to load keeps the anchor known without loading it.
   if (collector?.skipped.has(node)) {
     return getGroupMatchingRouteName(node);
+  }
+  // A read that must not load modules treats every anchor it has not read yet as missing.
+  if (collector && !collector.load) {
+    collector.missing.add(node);
+    return undefined;
   }
   const loaded = loadLayout(node);
   if (loaded instanceof Promise) {
@@ -41,14 +49,16 @@ export function getGroupMatchingRouteName(node: RouteNode): string | undefined {
 /**
  * Runs `fn` and returns the layouts whose anchors it needed but could not read.
  * Layouts in `skipped` failed to load, so their anchors are skipped without recording them.
+ * When `load` is `false`, `fn` does not load layout modules.
  */
 export function collectMissingLayouts<T>(
   fn: () => T,
-  skipped: ReadonlySet<RouteNode> = new Set()
+  skipped: ReadonlySet<RouteNode> = new Set(),
+  load = true
 ): { value: T; missing: RouteNode[] } {
   const outerCollector = collector;
   const missing = new Set<RouteNode>();
-  collector = { missing, skipped };
+  collector = { missing, skipped, load };
   try {
     return { value: fn(), missing: [...missing] };
   } finally {

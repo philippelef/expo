@@ -1,7 +1,9 @@
 import type { Route } from '../../native';
-import type { NativeStackDescriptorMap } from '../types';
+import type { NativeStackNavigationOptions } from '../types';
 
-export const getModalRouteKeys = (routes: Route<string>[], descriptors: NativeStackDescriptorMap) =>
+export type RouteOptionsMap = Record<string, { options: NativeStackNavigationOptions } | undefined>;
+
+export const getModalRouteKeys = (routes: Route<string>[], descriptors: RouteOptionsMap) =>
   routes.reduce<string[]>((acc, route) => {
     const { presentation } = descriptors[route.key]?.options ?? {};
 

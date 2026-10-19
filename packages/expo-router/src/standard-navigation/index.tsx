@@ -15,6 +15,7 @@ import {
   type RouterFactory,
 } from '../react-navigation/native';
 import { getValidInitialRouteName } from '../routeNode';
+import { DescribeRouteContext } from './DescribeRouteContext';
 import type {
   IntegrateWithRouterOptions,
   NavigatorContentProps,
@@ -232,19 +233,21 @@ export function integrateWithRouter<
 
     const content = (
       <NavigationContent>
-        <NavigatorContent
-          // `extraProps` is everything that is not a `useNavigationBuilder` option, which is the
-          // navigator props *and* the router options merged together — at runtime there is no way
-          // to tell the two apart, so the router options are intentionally forwarded here as well.
-          // This is benign: `StandardNavigatorContentProps` only surfaces the navigator props in
-          // its type, so the TS contract keeps users from reading router options off `NavigatorContent`
-          // in the common case, even though they are physically present on the object.
-          {...(extraProps as unknown as NavigatorProps)}
-          // `derivedProps` is partial only when `CreateProps` is empty; otherwise `createProps` is
-          // required and returns the complete shape.
-          {...(derivedProps as CreateProps)}
-          {...standardArgs}
-        />
+        <DescribeRouteContext value={describe}>
+          <NavigatorContent
+            // `extraProps` is everything that is not a `useNavigationBuilder` option, which is the
+            // navigator props *and* the router options merged together — at runtime there is no way
+            // to tell the two apart, so the router options are intentionally forwarded here as well.
+            // This is benign: `StandardNavigatorContentProps` only surfaces the navigator props in
+            // its type, so the TS contract keeps users from reading router options off `NavigatorContent`
+            // in the common case, even though they are physically present on the object.
+            {...(extraProps as unknown as NavigatorProps)}
+            // `derivedProps` is partial only when `CreateProps` is empty; otherwise `createProps` is
+            // required and returns the complete shape.
+            {...(derivedProps as CreateProps)}
+            {...standardArgs}
+          />
+        </DescribeRouteContext>
       </NavigationContent>
     );
 

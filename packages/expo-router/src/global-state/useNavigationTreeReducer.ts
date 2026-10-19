@@ -32,7 +32,7 @@ import { indexNavigationTree, reduceNavigationTree, resolveOrigin } from './redu
 import type { RouterRegistry } from './routerRegistry';
 import { markActionEnqueuedAndReturnId, type QueuedRoutingIntent } from './routingQueue';
 import { findStateByKey, resetNavigatorState } from './stateUtils';
-import type { StoreRedirects } from './types';
+import type { LinkToOptions, StoreRedirects } from './types';
 
 // React IDs can repeat after a reload; the session prefix keeps old browser entries distinct.
 const browserHistorySessionId = nanoid();
@@ -568,6 +568,43 @@ export function useNavigationTreeReducer({
     reactDispatch({ ...intent, deferrable });
   });
 
+  const getNavigatorStateForHref = useLatestCallback(
+    (href: string, options: LinkToOptions, state: NavigationState) => {
+      // The prediction must not load layouts. Without a layout's anchor it gives no result, and the
+      // native stack checks the routes after the navigation.
+      const { value, missing } = collectMissingLayouts(
+        () => {
+          const resolution = getNavigateAction(
+            href,
+            options,
+            { ...config, openExternalRedirects: false },
+            options.event,
+            options.withAnchor,
+            options.dangerouslySingular,
+            undefined,
+            state
+          );
+          if (resolution.status === 'invalid' || typeof resolution.action.target !== 'string') {
+            return undefined;
+          }
+          // The `ACTION` branch is the path that real navigation takes. The `NAVIGATE_TO_HREF`
+          // branch would log warnings for an invalid href.
+          const next = reduceTree(
+            { ...result, state },
+            { type: 'ACTION', payload: { action: resolution.action }, actionId: 0 },
+            config
+          );
+          const stateKey = resolution.action.target;
+          const navigatorState = findStateByKey(next.state, stateKey);
+          return navigatorState && { stateKey, state: navigatorState };
+        },
+        undefined,
+        false
+      );
+      return missing.length === 0 ? value : undefined;
+    }
+  );
+
   const resume = React.useEffectEvent((failed: RouteNode[]) => {
     const dispatchResume = () => reactDispatch({ type: 'RESUME', failed });
     if (result.deferred?.inTransition) {
@@ -604,6 +641,7 @@ export function useNavigationTreeReducer({
     resetNavigator,
     handleAction,
     processIntent,
+    getNavigatorStateForHref,
   };
 }
 

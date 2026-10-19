@@ -12,6 +12,7 @@ import { resolveHref } from './href';
 import type { LinkProps } from './useLinkHooks';
 import { useInteropClassName, useHrefAttrs } from './useLinkHooks';
 import useLinkToPathProps from './useLinkToPathProps';
+import { useModalPresentationWarning } from './useModalPresentationWarning';
 
 export function BaseExpoRouterLink({
   href,
@@ -49,6 +50,12 @@ export function BaseExpoRouterLink({
 
   const props = useLinkToPathProps({
     href: resolvedHref,
+    event,
+    relativeToDirectory,
+    withAnchor,
+    dangerouslySingular: singular,
+  });
+  useModalPresentationWarning(resolvedHref, {
     event,
     relativeToDirectory,
     withAnchor,

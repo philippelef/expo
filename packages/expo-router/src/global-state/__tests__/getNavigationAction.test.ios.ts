@@ -99,7 +99,7 @@ describe(getNavigateAction, () => {
       navigationState
     );
 
-    expect(mockApplyRedirects).toHaveBeenCalledWith('/from', redirects);
+    expect(mockApplyRedirects).toHaveBeenCalledWith('/from', redirects, undefined);
   });
 
   it('parses the href returned by applyRedirects', () => {
